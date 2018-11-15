@@ -1,0 +1,13 @@
+[Unit]
+Description= --- Adminer docker container with LE support ---
+After=docker.service
+Wants=mysql-docker.service network-online.target docker.socket
+Requires=docker.socket
+
+[Service]
+Restart=always
+ExecStop=/usr/bin/docker stop -t 10 adminer
+ExecStart=/usr/bin/docker start -a adminer
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,13 @@
+[Unit]
+Description= --- Nextcloud docker container behind proxy.service ---
+After=docker.service
+Wants=mysql-docker.service network-online.target docker.socket
+Requires=docker.socket
+
+[Service]
+Restart=always
+ExecStop=/usr/bin/docker stop -t 10 nextcloud
+ExecStart=/usr/bin/docker start -a nextcloud
+
+[Install]
+WantedBy=multi-user.target

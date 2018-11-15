@@ -1,0 +1,83 @@
+version: "3"
+
+networks:
+  proxy:
+    external: true
+  internal:
+    external: false
+
+services:
+  traefik:
+    image: traefik:latest
+    command: --docker
+    container_name: traefik
+    hostname: traefik
+    labels:
+      - traefik.backend=traefik
+      - traefik.frontend.rule=Host:traefik.example.com
+      - traefik.docker.network=proxy
+      - traefik.port=9000
+    restart: always
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /opt/traefik/traefik.toml:/traefik.toml
+      - /opt/traefik/acme.json:/acme.json
+    networks:
+      - proxy
+    ports:
+      - 80:80
+      - 443:443
+      - 8080:8080
+      - 9000:9000
+
+  nextcloud:
+    image: nextcloud:latest
+    container_name: nextcloud
+    hostname: nextcloud
+    links:
+      - mysql
+    restart: always
+    volumes:
+      - /opt/nextcloud:/var/www/html
+    labels:
+      - traefik.backend=nextcloud
+      - traefik.frontend.rule=Host:nextcloud.example.com
+      - traefik.docker.network=proxy
+      - traefik.port=80
+    networks:
+      - internal
+      - proxy
+    depends_on:
+      - mysql
+
+  mysql:
+    image: mariadb:latest
+    container_name: mysql
+    hostname: mysql
+    environment:
+      MYSQL_DATABASE: DATABASE
+      MYSQL_ROOT_PASSWORD: ROOTPASS
+      MYSQL_USER: USERDB
+      MYSQL_PASSWORD: USERPASS
+    restart: always
+    volumes:
+      - /opt/mysql:/var/lib/mysql
+    networks:
+      - internal
+    labels:
+      - traefik.enable=false
+
+  adminer:
+    image: adminer:latest
+    container_name: adminer
+    hostname: adminer
+    labels:
+      - traefik.backend=adminer
+      - traefik.frontend.rule=Host:adminer.example.com
+      - traefik.docker.network=proxy
+      - traefik.port=8080
+    networks:
+      - internal
+      - proxy
+    depends_on:
+      - mysql

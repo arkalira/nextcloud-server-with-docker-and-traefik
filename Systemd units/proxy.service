@@ -1,0 +1,13 @@
+[Unit]
+Description= --- Traefik docker container with LE support ---
+After=docker.service
+Wants=nextcloud.service mysql-docker.service network-online.target docker.socket
+Requires=docker.socket
+
+[Service]
+Restart=always
+ExecStop=/usr/bin/docker stop -t 10 traefik
+ExecStart=/usr/bin/docker start -a traefik
+
+[Install]
+WantedBy=multi-user.target
